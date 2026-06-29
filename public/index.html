@@ -397,7 +397,8 @@ async function initDynamicData() {
     // 2. Tải Hội viên nổi bật (Chỉ hiển thị Approved)
     const membersRes = await fetch('/api/members?status=approved');
     if (membersRes.ok) {
-      const members = await membersRes.json();
+      const resData = await membersRes.json();
+      const members = resData.data || [];
       const grid = document.querySelector('.members-grid');
       if (grid && members.length > 0) {
         const topFive = members.slice(0, 5);
@@ -445,7 +446,8 @@ async function initDynamicData() {
     // 3. Tải Bài viết mới nhất (Approved)
     const postsRes = await fetch('/api/posts?status=approved');
     if (postsRes.ok) {
-      const posts = await postsRes.json();
+      const resData = await postsRes.json();
+      const posts = resData.data || [];
       const list = document.querySelector('.posts-list');
       if (list && posts.length > 0) {
         const topFour = posts.slice(0, 4);

@@ -9,11 +9,36 @@ const cors    = require('cors');
 const bcrypt  = require('bcrypt');
 const fetch   = (...a) => import('node-fetch').then(({ default: f }) => f(...a));
 const path    = require('path');
+const fs      = require('fs');
 const crypto  = require('crypto');
 const db      = require('./db');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// Helper đọc API key động từ config.json hoặc file .env
+function getAPIKey(provider) {
+  const configPath = path.join(__dirname, 'config.json');
+  if (fs.existsSync(configPath)) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (cfg[provider + '_API_KEY']) {
+        return cfg[provider + '_API_KEY'];
+      }
+    } catch (e) {
+      console.error('Lỗi đọc config.json:', e.message);
+    }
+  }
+  // Fallback về process.env
+  const keys = {
+    anthropic: process.env.ANTHROPIC_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
+    gemini: process.env.GEMINI_API_KEY,
+    deepseek: process.env.DEEPSEEK_API_KEY,
+    openrouter: process.env.OPENROUTER_API_KEY,
+  };
+  return keys[provider] || '';
+}
 
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(express.json({ limit: '2mb' }));
@@ -131,6 +156,65 @@ app.post('/api/admin/logout', authMiddleware, async (req, res) => {
 // Kiểm tra trạng thái Auth
 app.get('/api/admin/check-auth', authMiddleware, (req, res) => {
   res.json({ success: true, admin: req.admin });
+});
+
+// Lưu cấu hình và API key của AI Provider
+app.post('/api/admin/save-config', authMiddleware, async (req, res) => {
+  const { provider, model, apiKey } = req.body;
+  if (!provider || !model) {
+    return res.status(400).json({ error: 'Thiếu thông tin provider hoặc model.' });
+  }
+
+  try {
+    // 1. Lưu provider/model vào bảng ai_config trong DB
+    await db.query('DELETE FROM ai_config'); // chỉ lưu 1 dòng hoạt động duy nhất
+    await db.query('INSERT INTO ai_config (provider, model, is_active) VALUES (?, ?, 1)', [provider, model]);
+
+    // 2. Nếu có nhập apiKey, lưu đè vào file config.json
+    if (apiKey && apiKey !== '(key đã lưu)' && apiKey !== '**************************************' && apiKey.trim() !== '') {
+      const configPath = path.join(__dirname, 'config.json');
+      let cfg = {};
+      if (fs.existsSync(configPath)) {
+        try {
+          cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        } catch {}
+      }
+      cfg[provider + '_API_KEY'] = apiKey.trim();
+      fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), 'utf8');
+    }
+
+    res.json({ success: true, message: 'Đã lưu cấu hình và API key thành công.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Lấy cấu hình AI hiện tại
+app.get('/api/admin/get-config', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT provider, model FROM ai_config WHERE is_active = 1 LIMIT 1');
+    const config = rows[0] || { provider: 'anthropic', model: 'claude-sonnet-4-6' };
+
+    let hasKey = false;
+    const configPath = path.join(__dirname, 'config.json');
+    if (fs.existsSync(configPath)) {
+      try {
+        const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (cfg[config.provider + '_API_KEY']) {
+          hasKey = true;
+        }
+      } catch {}
+    }
+    // Check fallback process.env
+    if (!hasKey) {
+      const key = getAPIKey(config.provider);
+      if (key) hasKey = true;
+    }
+
+    res.json({ provider: config.provider, model: config.model, hasKey });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ════════════════════════════════════════════
@@ -399,10 +483,17 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
 // AI CHAT API
 // ════════════════════════════════════════════
 app.post('/api/chat', async (req, res) => {
-  const { provider, model, messages, system } = req.body;
+  const { provider, model, messages, system, apiKey } = req.body;
   if (!provider || !model || !messages) {
     return res.status(400).json({ error: 'Thiếu provider, model hoặc messages.' });
   }
+
+  const getRequestKey = (prov) => {
+    if (apiKey && apiKey !== '(key đã lưu)' && apiKey !== '**************************************' && apiKey.trim() !== '') {
+      return apiKey.trim();
+    }
+    return getAPIKey(prov);
+  };
 
   // Lấy context hội viên từ DB cho AI
   let memberContext = system || '';
@@ -431,9 +522,11 @@ ${events.map(e => `• ${e.title} — ${new Date(e.event_date).toLocaleDateStrin
     let result;
 
     if (provider === 'anthropic') {
+      const activeKey = getRequestKey('anthropic');
+      if (!activeKey) throw new Error('Chưa cấu hình API Key cho Anthropic.');
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method : 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': activeKey, 'anthropic-version': '2023-06-01' },
         body   : JSON.stringify({ model, max_tokens: 1024, system: memberContext, messages }),
       });
       const d = await r.json();
@@ -441,10 +534,12 @@ ${events.map(e => `• ${e.title} — ${new Date(e.event_date).toLocaleDateStrin
       result = { text: d.content?.[0]?.text || '', usage: { input: d.usage?.input_tokens, output: d.usage?.output_tokens } };
     }
     else if (provider === 'openai') {
+      const activeKey = getRequestKey('openai');
+      if (!activeKey) throw new Error('Chưa cấu hình API Key cho OpenAI.');
       const msgs = [{ role: 'system', content: memberContext }, ...messages];
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.OPENAI_API_KEY },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeKey },
         body   : JSON.stringify({ model, max_tokens: 1024, messages: msgs }),
       });
       const d = await r.json();
@@ -452,8 +547,10 @@ ${events.map(e => `• ${e.title} — ${new Date(e.event_date).toLocaleDateStrin
       result = { text: d.choices?.[0]?.message?.content || '', usage: { input: d.usage?.prompt_tokens, output: d.usage?.completion_tokens } };
     }
     else if (provider === 'gemini') {
+      const activeKey = getRequestKey('gemini');
+      if (!activeKey) throw new Error('Chưa cấu hình API Key cho Gemini.');
       const contents = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`, {
         method : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ system_instruction: { parts: [{ text: memberContext }] }, contents, generationConfig: { maxOutputTokens: 1024 } }),
@@ -463,10 +560,12 @@ ${events.map(e => `• ${e.title} — ${new Date(e.event_date).toLocaleDateStrin
       result = { text: d.candidates?.[0]?.content?.parts?.[0]?.text || '', usage: { input: d.usageMetadata?.promptTokenCount, output: d.usageMetadata?.candidatesTokenCount } };
     }
     else if (provider === 'deepseek') {
+      const activeKey = getRequestKey('deepseek');
+      if (!activeKey) throw new Error('Chưa cấu hình API Key cho DeepSeek.');
       const msgs = [{ role: 'system', content: memberContext }, ...messages];
       const r = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.DEEPSEEK_API_KEY },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeKey },
         body   : JSON.stringify({ model, max_tokens: 1024, messages: msgs }),
       });
       const d = await r.json();
@@ -474,10 +573,12 @@ ${events.map(e => `• ${e.title} — ${new Date(e.event_date).toLocaleDateStrin
       result = { text: d.choices?.[0]?.message?.content || '', usage: { input: d.usage?.prompt_tokens, output: d.usage?.completion_tokens } };
     }
     else if (provider === 'openrouter') {
+      const activeKey = getRequestKey('openrouter');
+      if (!activeKey) throw new Error('Chưa cấu hình API Key cho OpenRouter.');
       const msgs = [{ role: 'system', content: memberContext }, ...messages];
       const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.OPENROUTER_API_KEY, 'HTTP-Referer': process.env.SITE_URL || 'https://bizhub.vn', 'X-Title': 'BizHub AI' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeKey, 'HTTP-Referer': process.env.SITE_URL || 'https://bizhub.vn', 'X-Title': 'BizHub AI' },
         body   : JSON.stringify({ model, max_tokens: 1024, messages: msgs }),
       });
       const d = await r.json();

@@ -175,7 +175,7 @@ async function testConn(){
     const r = await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({provider:selProvider.id,model:selModel.id,system:'Bạn là trợ lý BizHub.',messages:[{role:'user',content:q}]})
+      body:JSON.stringify({provider:selProvider.id,model:selModel.id,system:'Bạn là trợ lý BizHub.',apiKey:key,messages:[{role:'user',content:q}]})
     });
     const d=await r.json();
     if(!r.ok) throw new Error(d.error||'HTTP '+r.status);
@@ -197,11 +197,33 @@ async function testConn(){
   btn.disabled=false; btn.innerHTML='<i class="ti ti-send"></i> Gửi thử';
 }
 
-function saveCfg(){
+async function saveCfg(){
   if(!selProvider){alert('Chọn provider trước.');return;}
-  window.setAIConfig({provider:selProvider.id,model:selModel.id});
-  updateStatus('ok','Đã lưu — BizHub AI đang dùng '+selProvider.name+' / '+selModel.label,'#EAF3DE','#27500A');
-  showToast('Đã lưu cấu hình AI!','success');
+  const key=document.getElementById('api-key-input').value.trim();
+  
+  try {
+    const res = await fetch('/api/admin/save-config', {
+      method: 'POST',
+      headers: { ...window.authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: selProvider.id,
+        model: selModel.id,
+        apiKey: key
+      })
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || 'Lưu cấu hình thất bại.');
+
+    window.setAIConfig({provider:selProvider.id,model:selModel.id});
+    updateStatus('ok','Đã lưu — BizHub AI đang dùng '+selProvider.name+' / '+selModel.label,'#EAF3DE','#27500A');
+    showToast('Đã lưu cấu hình AI và API key thành công!','success');
+    if (key && key !== '(key đã lưu)' && key !== '**************************************') {
+      document.getElementById('api-key-input').value = '(key đã lưu)';
+    }
+  } catch (err) {
+    showToast('Lỗi: ' + err.message, 'danger');
+    updateStatus('err','Không thể lưu cấu hình — ' + err.message,'#FCEBEB','#791F1F');
+  }
 }
 
 function resetCfg(){
@@ -214,18 +236,51 @@ function resetCfg(){
 
 function updateStatus(type,msg,bg,color){
   const el=document.getElementById('status-bar');
-  el.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:1rem;background:${bg};border:0.5px solid ${color};color:${color}`;
+  if (el) el.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:1rem;background:${bg};border:0.5px solid ${color};color:${color}`;
   const icons={ok:'ti-circle-check',warn:'ti-alert-triangle',err:'ti-circle-x',none:'ti-info-circle'};
-  document.getElementById('status-text').parentElement.innerHTML=`<i class="ti ${icons[type]||'ti-info-circle'}"></i> <span>${msg}</span>`;
+  const st = document.getElementById('status-text');
+  if (st) st.parentElement.innerHTML=`<i class="ti ${icons[type]||'ti-info-circle'}"></i> <span>${msg}</span>`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   const admin = await window.checkAuthOrRedirect();
   if (admin) {
-    renderProviders();
+    await loadSavedConfig();
     updateSidebarBadges();
   }
 });
+
+async function loadSavedConfig() {
+  try {
+    const res = await fetch('/api/admin/get-config', { headers: window.authHeaders() });
+    if (res.ok) {
+      const config = await res.json();
+      window.setAIConfig({ provider: config.provider, model: config.model });
+      renderProviders();
+      
+      const sp = PROVIDERS.find(p=>p.id===config.provider);
+      if (sp) {
+        selectProvider(config.provider, true);
+        const idx = sp.models.findIndex(m => m.id === config.model);
+        if (idx !== -1) {
+          selectModel(config.provider, idx);
+        }
+        if (config.hasKey) {
+          document.getElementById('api-key-input').value = '(key đã lưu)';
+          updateStatus('ok','Đã cấu hình — BizHub AI đang sử dụng '+sp.name+' / '+(sp.models[idx]?.label || config.model),'#EAF3DE','#27500A');
+        } else {
+          document.getElementById('api-key-input').value = '';
+          updateStatus('warn',`Đã chọn ${sp.name} — vui lòng nhập API key.`,'#FAEEDA','#633806');
+        }
+      }
+    } else {
+      renderProviders();
+    }
+  } catch (err) {
+    console.error('Error loading config:', err.message);
+    renderProviders();
+  }
+}
 
 async function updateSidebarBadges() {
   try {
