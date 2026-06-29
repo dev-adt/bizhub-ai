@@ -11,15 +11,13 @@
   <aside class="sidebar">
     <div class="sb-logo"><div class="sb-logo-icon"><i class="ti ti-building-community"></i></div><div><div class="sb-logo-name">BizHub</div><div class="sb-logo-sub">Hội viên doanh nghiệp</div></div></div>
     <div class="sb-search"><div class="sb-sw"><i class="ti ti-search"></i><input type="text" id="sb-search" placeholder="Tìm kiếm..."><div class="search-dropdown" id="sb-results"></div></div></div>
-    <div class="sb-sec">Quản lý</div>
-    <a href="index.html" class="sb-item"><i class="ti ti-layout-dashboard"></i> Tổng quan</a>
-    <a href="members.html" class="sb-item"><i class="ti ti-users"></i> Hội viên</a>
-    <a href="posts.html" class="sb-item"><i class="ti ti-news"></i> Bài viết</a>
-    <a href="register.html" class="sb-item"><i class="ti ti-user-plus"></i> Đăng ký</a>
-    <a href="admin.html" class="sb-item active"><i class="ti ti-shield-check"></i> Duyệt hội viên <span class="sb-badge" id="sb-badge">3</span></a>
-    <a href="ai-chat.html" class="sb-item"><i class="ti ti-robot"></i> Trợ lý AI</a>
+    <div class="sb-sec">Quản trị</div>
+    <a href="admin-dashboard.html" class="sb-item"><i class="ti ti-layout-dashboard"></i> Tổng quan</a>
+    <a href="admin-members.html" class="sb-item active"><i class="ti ti-users"></i> Duyệt hội viên <span class="sb-badge" id="sb-badge-members">0</span></a>
+    <a href="admin-posts.html" class="sb-item"><i class="ti ti-news"></i> Duyệt bài viết <span class="sb-badge" id="sb-badge-posts">0</span></a>
     <div class="sb-sec">Hệ thống</div>
-    <a href="provider-config.html" class="sb-item"><i class="ti ti-settings"></i> Cài đặt AI</a>
+    <a href="admin-config.html" class="sb-item"><i class="ti ti-settings"></i> Cài đặt AI</a>
+    <a href="index.html" class="sb-item" target="_blank"><i class="ti ti-external-link"></i> Xem Trang chủ</a>
     <div class="lang-section"><div class="lang-label">NGÔN NGỮ</div><div class="lang-grid"><button class="lb active" onclick="setLang('vi')">🇻🇳 VI</button><button class="lb" onclick="setLang('en')">🇺🇸 EN</button><button class="lb" onclick="setLang('zh')">🇨🇳 ZH</button><button class="lb" onclick="setLang('ja')">🇯🇵 JA</button></div></div>
   </aside>
   <div class="main">
@@ -131,10 +129,28 @@ async function loadData() {
       };
     });
     render();
+    updateSidebarBadges();
   } catch (err) {
     console.error(err);
     document.getElementById('admin-tbody').innerHTML = `<tr><td colspan="7"><div class="empty"><i class="ti ti-alert-triangle"></i>Lỗi tải dữ liệu: ${err.message}</div></td></tr>`;
   }
+}
+
+async function updateSidebarBadges() {
+  try {
+    const resMem = await fetch('/api/members?status=pending', { headers: window.authHeaders() });
+    if (resMem.ok) {
+      const data = await resMem.json();
+      const badge = document.getElementById('sb-badge-members');
+      if (badge) badge.textContent = data.total || 0;
+    }
+    const resPost = await fetch('/api/posts?status=pending', { headers: window.authHeaders() });
+    if (resPost.ok) {
+      const data = await resPost.json();
+      const badge = document.getElementById('sb-badge-posts');
+      if (badge) badge.textContent = data.data.length || 0;
+    }
+  } catch {}
 }
 
 function updateStats(){

@@ -11,15 +11,13 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="sb-logo"><div class="sb-logo-icon"><i class="ti ti-building-community"></i></div><div><div class="sb-logo-name">BizHub</div><div class="sb-logo-sub">Hội viên doanh nghiệp</div></div></div>
-    <div class="sb-sec" data-i18n="menu_manage">Quản lý</div>
-    <a href="index.html" class="sb-item"><i class="ti ti-layout-dashboard"></i> <span>Tổng quan</span></a>
-    <a href="members.html" class="sb-item"><i class="ti ti-users"></i> <span>Hội viên</span></a>
-    <a href="posts.html" class="sb-item"><i class="ti ti-news"></i> <span>Bài viết</span></a>
-    <a href="register.html" class="sb-item"><i class="ti ti-user-plus"></i> <span>Đăng ký</span></a>
-    <a href="admin.html" class="sb-item"><i class="ti ti-shield-check"></i> <span>Duyệt hội viên</span></a>
-    <a href="ai-chat.html" class="sb-item"><i class="ti ti-robot"></i> <span>Trợ lý AI</span></a>
+    <div class="sb-sec">Quản trị</div>
+    <a href="admin-dashboard.html" class="sb-item"><i class="ti ti-layout-dashboard"></i> Tổng quan</a>
+    <a href="admin-members.html" class="sb-item"><i class="ti ti-users"></i> Duyệt hội viên <span class="sb-badge" id="sb-badge-members">0</span></a>
+    <a href="admin-posts.html" class="sb-item"><i class="ti ti-news"></i> Duyệt bài viết <span class="sb-badge" id="sb-badge-posts">0</span></a>
     <div class="sb-sec">Hệ thống</div>
-    <a href="provider-config.html" class="sb-item active"><i class="ti ti-settings"></i> <span>Cài đặt AI</span></a>
+    <a href="admin-config.html" class="sb-item active"><i class="ti ti-settings"></i> Cài đặt AI</a>
+    <a href="index.html" class="sb-item" target="_blank"><i class="ti ti-external-link"></i> Xem Trang chủ</a>
     <div class="lang-section">
       <div class="lang-label">NGÔN NGỮ</div>
       <div class="lang-grid">
@@ -221,7 +219,30 @@ function updateStatus(type,msg,bg,color){
   document.getElementById('status-text').parentElement.innerHTML=`<i class="ti ${icons[type]||'ti-info-circle'}"></i> <span>${msg}</span>`;
 }
 
-renderProviders();
+document.addEventListener('DOMContentLoaded', async () => {
+  const admin = await window.checkAuthOrRedirect();
+  if (admin) {
+    renderProviders();
+    updateSidebarBadges();
+  }
+});
+
+async function updateSidebarBadges() {
+  try {
+    const resMem = await fetch('/api/members?status=pending', { headers: window.authHeaders() });
+    if (resMem.ok) {
+      const data = await resMem.json();
+      const badge = document.getElementById('sb-badge-members');
+      if (badge) badge.textContent = data.total || 0;
+    }
+    const resPost = await fetch('/api/posts?status=pending', { headers: window.authHeaders() });
+    if (resPost.ok) {
+      const data = await resPost.json();
+      const badge = document.getElementById('sb-badge-posts');
+      if (badge) badge.textContent = data.data.length || 0;
+    }
+  } catch {}
+}
 </script>
 </body>
 </html>

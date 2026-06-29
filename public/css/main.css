@@ -215,3 +215,26 @@ tbody tr:hover td{background:var(--surface-1)}
   .provider-grid{grid-template-columns:1fr 1fr}
   .form-row{grid-template-columns:1fr}
 }
+
+/* PUBLIC STYLES */
+body.public-body {
+  height: auto;
+  overflow: auto;
+  background: #ffffff;
+}
+.public-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:0.5px solid #e0dfda;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;font-size:14px;box-sizing:border-box}
+.nav-logo{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:500;color:var(--text-primary)}
+.nav-logo-icon{width:32px;height:32px;border-radius:8px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;color:#185FA5;font-size:17px;flex-shrink:0}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{padding:5px 13px;border-radius:7px;font-size:14px;color:#5f5e5a;transition:all .12s;cursor:pointer}
+.nav-link:hover{background:#f5f5f2;color:#1a1a18}
+.nav-right{display:flex;align-items:center;gap:8px}
+.btn-ghost{padding:6px 14px;border-radius:8px;border:0.5px solid #b4b2a9;background:#fff;color:#1a1a18;font-size:14px;cursor:pointer;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn-ghost:hover{background:#f5f5f2}
+.btn-primary{padding:7px 18px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{background:#0C447C}

@@ -220,7 +220,7 @@ async function handleLogin(e) {
     localStorage.setItem('bizhub_admin_user', JSON.stringify(data.admin));
 
     // Redirect về trang chủ quản lý
-    window.location.href = 'index.html';
+    window.location.href = 'admin-dashboard.html';
   } catch (err) {
     errorMsg.textContent = err.message;
     errorBox.style.display = 'flex';
