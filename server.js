@@ -540,7 +540,7 @@ app.post('/api/admin/save-config', authMiddleware, async (req, res) => {
 });
 
 // Lấy cấu hình AI hiện tại
-app.get('/api/admin/get-config', authMiddleware, async (req, res) => {
+app.get('/api/admin/get-config', anyAuthMiddleware, async (req, res) => {
   try {
     const [rows] = await db.query('SELECT provider, model FROM ai_config WHERE is_active = 1 LIMIT 1');
     const config = rows[0] || { provider: 'anthropic', model: 'claude-sonnet-4-6' };

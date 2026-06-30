@@ -16,7 +16,7 @@ export const AIChat = () => {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [aiConfig, setAiConfig] = useState({ provider: 'Gemini', model: '' });
+  const [aiConfig, setAiConfig] = useState({ provider: 'Gemini', model: 'gemini-1.5-flash' });
 
   const messagesEndRef = useRef(null);
 
@@ -36,9 +36,18 @@ export const AIChat = () => {
         if (res.ok) {
           const data = await res.json();
           const providerNames = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini', deepseek: 'DeepSeek', openrouter: 'OpenRouter' };
+          const defaultModels = {
+            openai: 'gpt-4o-mini',
+            anthropic: 'claude-3-5-sonnet-20240620',
+            gemini: 'gemini-1.5-flash',
+            deepseek: 'deepseek-chat',
+            openrouter: 'google/gemini-2.0-flash-001',
+            ollama: 'llama3'
+          };
+          const provKey = (data.provider || 'gemini').toLowerCase();
           setAiConfig({
-            provider: providerNames[data.provider] || data.provider,
-            model: data.model || ''
+            provider: providerNames[provKey] || data.provider,
+            model: data.model || defaultModels[provKey] || ''
           });
         }
       } catch (e) {

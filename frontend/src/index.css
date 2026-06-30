@@ -2412,3 +2412,18 @@ nav {
   }
 }
 
+/* Light Theme Input overrides to resolve white-on-white text */
+.light-theme .fg input,
+.light-theme .fg select,
+.light-theme .fg textarea {
+  background-color: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+
+.light-theme .fg select option {
+  background-color: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+}
+
+
