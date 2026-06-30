@@ -25,7 +25,7 @@
     <a href="index.html#tiers" class="nav-link">Gói hội viên</a>
     <a href="ai-chat.html" class="nav-link">Trợ lý AI</a>
   </div>
-  <div class="nav-right">
+  <div class="nav-right" id="nav-right">
     <a href="member-login.html" class="btn">Đăng nhập</a>
     <a href="register.html" class="btn btn-primary"><i class="ti ti-user-plus" aria-hidden="true"></i> Đăng ký hội viên</a>
   </div>
@@ -82,7 +82,7 @@ const getInitialsColors = (name) => {
 
 async function loadPosts() {
   try {
-    const res = await fetch('/api/posts?status=approved');
+    const res = await fetch('/api/posts?status=approved', { headers: window.getAnyAuthHeaders() });
     if (!res.ok) throw new Error('Không thể tải danh sách bài viết');
     const data = await res.json();
     
@@ -177,7 +177,7 @@ function closeModal() {
   document.getElementById('post-modal').style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', loadPosts);
+document.addEventListener('DOMContentLoaded', () => { window.updateNavbar(); loadPosts(); });
 </script>
 </body>
 </html>

@@ -169,7 +169,7 @@
     <a href="index.html#tiers" class="nav-link">Gói hội viên</a>
     <a href="ai-chat.html" class="nav-link">Trợ lý AI</a>
   </div>
-  <div class="nav-right">
+  <div class="nav-right" id="nav-right">
     <a href="member-login.html" class="btn">Đăng nhập</a>
     <a href="register.html" class="btn btn-primary"><i class="ti ti-user-plus"></i> Đăng ký hội viên</a>
   </div>
@@ -728,6 +728,7 @@ async function loadOpportunities() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  window.updateNavbar();
   loadOpportunities();
 });
 </script>

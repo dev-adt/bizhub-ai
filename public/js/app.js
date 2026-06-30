@@ -58,6 +58,48 @@ window.callAI = async (messages, systemPrompt, sessionId) => {
   return res.json(); // { text, usage }
 };
 
+// Cập nhật navbar theo trạng thái đăng nhập — dùng chung cho mọi trang
+window.updateNavbar = function() {
+  const memberToken = localStorage.getItem('bizhub_member_token');
+  const memberUser  = JSON.parse(localStorage.getItem('bizhub_member_user') || 'null');
+  const adminToken  = localStorage.getItem('bizhub_admin_token');
+  const adminUser   = JSON.parse(localStorage.getItem('bizhub_admin_user') || 'null');
+
+  const getInitials = (name) => name
+    ? name.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase()
+    : '??';
+
+  // Loại 1: navbar dark với avatar icon (index.html, ai-chat.html)
+  const navAv = document.getElementById('nav-av');
+  if (navAv) {
+    if (memberToken && memberUser) {
+      navAv.href = 'member-dashboard.html';
+      navAv.textContent = getInitials(memberUser.name);
+      navAv.title = (memberUser.name || '') + ' — Xem Dashboard';
+    } else if (adminToken && adminUser) {
+      navAv.href = 'admin.html';
+      navAv.textContent = getInitials(adminUser.name);
+      navAv.title = (adminUser.name || '') + ' — Admin Panel';
+    }
+  }
+
+  // Loại 2: navbar public với nút Đăng nhập/Đăng ký (members.html, posts.html, register.html)
+  const navRight = document.getElementById('nav-right');
+  if (navRight) {
+    if (memberToken && memberUser) {
+      const lastName = memberUser.name ? memberUser.name.trim().split(/\s+/).pop() : 'Hội viên';
+      navRight.innerHTML = `
+        <a href="member-dashboard.html" class="btn btn-primary" style="gap:6px"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</a>
+        <a href="member-dashboard.html" class="btn" style="font-weight:600">${getInitials(memberUser.name)} ${lastName}</a>
+      `;
+    } else if (adminToken && adminUser) {
+      navRight.innerHTML = `
+        <a href="admin.html" class="btn btn-primary" style="gap:6px"><i class="ti ti-shield" aria-hidden="true"></i> Admin Panel</a>
+      `;
+    }
+  }
+};
+
 // Helper: lấy headers xác thực cho API Member hoặc Admin
 window.getAnyAuthHeaders = () => {
   const memberToken = localStorage.getItem('bizhub_member_token');
