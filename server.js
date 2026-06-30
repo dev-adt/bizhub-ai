@@ -668,7 +668,6 @@ app.get('/api/posts', async (req, res) => {
       }
     }
 
-    // Nếu status không phải 'approved', chỉ cho phép admin đã đăng nhập xem
     let sql = `SELECT p.*, m.name AS company_name, m.tier AS company_tier
                FROM posts p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1`;
     const params = [];
@@ -679,22 +678,48 @@ app.get('/api/posts', async (req, res) => {
     sql += ' ORDER BY p.created_at DESC';
 
     const [rows] = await db.query(sql, params);
-    res.json({ success: true, data: rows, total: rows.length });
+
+    // Ẩn contact_info cho khách vãng lai — chỉ trả về thông tin thật khi đã xác thực
+    const safeRows = isAuthenticated ? rows : rows.map(p => ({
+      ...p,
+      contact_info: 'Đăng nhập hội viên để xem thông tin liên hệ'
+    }));
+
+    res.json({ success: true, data: safeRows, total: safeRows.length });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Đăng bài mới
-app.post('/api/posts', async (req, res) => {
+// Đăng bài mới — yêu cầu hội viên đã được duyệt
+app.post('/api/posts', memberAuthMiddleware, async (req, res) => {
   try {
-    const { member_id, title, summary, body, type, category, tags, contact_info, deadline } = req.body;
-    if (!member_id || !title) return res.status(400).json({ success: false, error: 'Thiếu member_id hoặc tiêu đề.' });
+    if (req.member.status !== 'approved') {
+      return res.status(403).json({ success: false, error: 'Hồ sơ hội viên chưa được phê duyệt. Vui lòng chờ admin duyệt trước khi đăng tin.' });
+    }
+
+    // Kiểm tra giới hạn số bài đăng trong tháng theo tier
+    const tierLimit = TIER_LIMITS[req.member.tier] || TIER_LIMITS.Silver;
+    if (tierLimit.posts_per_month !== Infinity) {
+      const [[countRow]] = await db.query(
+        `SELECT COUNT(*) AS cnt FROM posts WHERE member_id = ? AND YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW())`,
+        [req.member.id]
+      );
+      if (countRow.cnt >= tierLimit.posts_per_month) {
+        return res.status(429).json({
+          success: false,
+          error: `Gói ${req.member.tier} chỉ được đăng tối đa ${tierLimit.posts_per_month} bài/tháng. Nâng cấp gói để đăng thêm.`
+        });
+      }
+    }
+
+    const { title, summary, body, type, category, tags, contact_info, deadline } = req.body;
+    if (!title) return res.status(400).json({ success: false, error: 'Tiêu đề bài đăng không được trống.' });
 
     const [result] = await db.query(
       `INSERT INTO posts (member_id, title, summary, body, type, category, tags, contact_info, deadline, status)
        VALUES (?,?,?,?,?,?,?,?,?,'pending')`,
-      [member_id, title, summary, body, type, category, JSON.stringify(tags || []), contact_info, deadline || null]
+      [req.member.id, title, summary, body, type, category, JSON.stringify(tags || []), contact_info, deadline || null]
     );
     res.json({ success: true, id: result.insertId, message: 'Bài viết đã gửi để admin duyệt.' });
   } catch (err) {
