@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -6,6 +6,15 @@ import { useTranslation } from '../contexts/LanguageContext';
 export const AdminLayout = ({ children, title }) => {
   const { user } = useAuth();
   const { currentLang } = useTranslation();
+
+  useEffect(() => {
+    document.body.classList.add('light-theme');
+    document.body.classList.remove('public-body');
+    return () => {
+      document.body.classList.remove('light-theme');
+    };
+  }, []);
+
 
   const getInitials = (name) => {
     if (!name) return 'AD';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -9,6 +9,12 @@ export const Navbar = () => {
   const [langOpen, setLangOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    document.body.classList.add('public-body');
+    document.body.classList.remove('light-theme');
+  }, []);
+
 
   const getInitials = (name) => {
     if (!name) return 'BH';
