@@ -2466,6 +2466,13 @@ select option {
   color: #0F172A;
 }
 
+/* Light Theme card title override to resolve white-on-white text */
+.light-theme .card-title {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+
 
 
 
