@@ -52,6 +52,7 @@ export const Posts = () => {
             type: p.type || 'Bài viết',
             contact: p.contact_info,
             tags: p.tags ? (typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags) : [],
+            image_url: p.image_url,
             date: new Date(p.created_at).toLocaleDateString('vi-VN')
           };
         });
@@ -168,6 +169,11 @@ export const Posts = () => {
             </div>
             
             <div style={{ padding: '1.5rem', textAlign: 'left' }}>
+              {selectedPost.image_url && (
+                <div style={{ marginBottom: '16px', width: '100%', height: '190px', borderRadius: '8px', overflow: 'hidden' }}>
+                  <img src={selectedPost.image_url} alt={selectedPost.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
                 <div className="av-circle" style={{ background: selectedPost.bg, color: selectedPost.fg, fontWeight: 600, width: '36px', height: '36px', fontSize: '12px' }}>{selectedPost.initials}</div>
                 <div>

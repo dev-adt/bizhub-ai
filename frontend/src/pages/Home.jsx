@@ -190,7 +190,7 @@ export const Home = () => {
             ) : latestPosts.length > 0 ? (
               latestPosts.map((p, idx) => {
                 const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('vi-VN') : '11/06/2026';
-                const imgUrl = demoImages[idx % demoImages.length];
+                const imgUrl = p.image_url || demoImages[idx % demoImages.length];
                 const companyName = p.company_name || 'Hội viên ẩn danh';
                 return (
                   <div className="opp-card" key={p.id}>
@@ -295,6 +295,11 @@ export const Home = () => {
             </div>
             
             <div style={{ marginBottom: '1.5rem', maxHeight: '50vh', overflowY: 'auto', textAlign: 'left' }}>
+              {selectedPost.image_url && (
+                <div style={{ marginBottom: '14px', width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden' }}>
+                  <img src={selectedPost.image_url} alt={selectedPost.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
               <div style={{ marginBottom: '14px' }}>
                 <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--neon-cyan)', fontWeight: 700 }}>Doanh nghiệp</span>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: '#FFFFFF', marginTop: '2px' }}>{selectedPost.company_name || 'Hội viên ẩn danh'}</div>

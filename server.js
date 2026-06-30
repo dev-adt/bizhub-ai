@@ -89,6 +89,13 @@ db.query(`
       await db.query("ALTER TABLE chat_logs ADD INDEX idx_member (member_id)");
       console.log('✅ Đã thêm cột member_id vào bảng chat_logs');
     }
+
+    // Thêm cột image_url vào bảng posts để hội viên tự tải ảnh minh họa bài viết
+    const [postCols] = await db.query("SHOW COLUMNS FROM posts LIKE 'image_url'");
+    if (!postCols.length) {
+      await db.query("ALTER TABLE posts ADD COLUMN image_url VARCHAR(1000) DEFAULT NULL AFTER deadline");
+      console.log('✅ Đã thêm cột image_url vào bảng posts');
+    }
   } catch (err) {
     console.error('❌ Lỗi khởi tạo DB hội viên:', err.message);
   }
@@ -791,13 +798,13 @@ app.post('/api/posts', memberAuthMiddleware, async (req, res) => {
       }
     }
 
-    const { title, summary, body, type, category, tags, contact_info, deadline } = req.body;
+    const { title, summary, body, type, category, tags, contact_info, deadline, image_url } = req.body;
     if (!title) return res.status(400).json({ success: false, error: 'Tiêu đề bài đăng không được trống.' });
 
     const [result] = await db.query(
-      `INSERT INTO posts (member_id, title, summary, body, type, category, tags, contact_info, deadline, status)
-       VALUES (?,?,?,?,?,?,?,?,?,'pending')`,
-      [req.member.id, title, summary, body, type, category, JSON.stringify(tags || []), contact_info, deadline || null]
+      `INSERT INTO posts (member_id, title, summary, body, type, category, tags, contact_info, deadline, image_url, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,'pending')`,
+      [req.member.id, title, summary, body, type, category, JSON.stringify(tags || []), contact_info, deadline || null, image_url || null]
     );
     res.json({ success: true, id: result.insertId, message: 'Bài viết đã gửi để admin duyệt.' });
   } catch (err) {

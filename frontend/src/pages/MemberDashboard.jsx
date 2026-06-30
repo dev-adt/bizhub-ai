@@ -31,7 +31,8 @@ export const MemberDashboard = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [newPostData, setNewPostData] = useState({
     title: '', summary: '', body: '', type: 'Tìm kiếm đối tác',
-    category: '', tags: '', contact_info: '', deadline: ''
+    category: '', tags: '', contact_info: '', deadline: '',
+    image_url: ''
   });
   const [creatingPost, setCreatingPost] = useState(false);
 
@@ -152,7 +153,8 @@ export const MemberDashboard = () => {
       // Reset form
       setNewPostData({
         title: '', summary: '', body: '', type: 'Tìm kiếm đối tác',
-        category: '', tags: '', contact_info: '', deadline: ''
+        category: '', tags: '', contact_info: '', deadline: '',
+        image_url: ''
       });
       loadDashboardData();
     } catch (err) {
@@ -442,6 +444,11 @@ export const MemberDashboard = () => {
                 <div className="fg">
                   <label>Hạn liên hệ (Hạn đăng bài)</label>
                   <input type="date" id="deadline" value={newPostData.deadline} onChange={handleNewPostChange} />
+                </div>
+
+                <div className="fg">
+                  <label>Ảnh minh họa (Link hình ảnh)</label>
+                  <input type="text" id="image_url" value={newPostData.image_url} onChange={handleNewPostChange} placeholder="Nhập link ảnh (Unsplash, Imgur...) để làm hình nền cho bài viết..." />
                 </div>
               </div>
 
