@@ -80,6 +80,46 @@ export const AdminMembers = () => {
     }
   };
 
+  const handleApproveUpgrade = async (id, name, newTier) => {
+    if (!confirm(`Duyệt nâng cấp gói hội viên cho "${name}" lên gói ${newTier}?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/members/${id}/approve-upgrade`, {
+        method: 'PATCH',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        alert('Đã phê duyệt nâng cấp gói thành công!');
+        loadMembers();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Thao tác thất bại.');
+      }
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
+  const handleRejectUpgrade = async (id, name) => {
+    if (!confirm(`Từ chối yêu cầu nâng cấp gói của "${name}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/members/${id}/reject-upgrade`, {
+        method: 'PATCH',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        alert('Đã từ chối nâng cấp gói.');
+        loadMembers();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Thao tác thất bại.');
+      }
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
   const getInitialsColors = (name) => {
     const sum = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
@@ -177,6 +217,34 @@ export const AdminMembers = () => {
                         <span className={`badge ${m.tier === 'Platinum' ? 'b-platinum' : m.tier === 'Gold' ? 'b-gold' : 'b-silver'}`}>
                           {m.tier === 'Platinum' ? '💎 Platinum' : m.tier === 'Gold' ? '🏅 Gold' : '🪙 Silver'}
                         </span>
+                        {m.tier_expires_at && m.tier !== 'Silver' && (
+                          <div style={{ fontSize: '10px', color: '#64748B', marginTop: '4px' }}>
+                            Hạn: {new Date(m.tier_expires_at).toLocaleDateString('vi-VN')}
+                          </div>
+                        )}
+                        {m.pending_tier_upgrade && (
+                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px dashed var(--amber)', padding: '6px', borderRadius: '4px', background: 'rgba(245,158,11,0.05)', maxWidth: '130px' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--amber)', fontWeight: '600' }}>
+                              <i className="ti ti-arrow-big-up-lines"></i> Lên {m.pending_tier_upgrade === 'Platinum' ? '💎 Plat' : '🏅 Gold'}
+                            </div>
+                            <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                              <button 
+                                className="quick-btn quick-btn-approve" 
+                                onClick={() => handleApproveUpgrade(m.id, m.name, m.pending_tier_upgrade)}
+                                style={{ padding: '2px 6px', fontSize: '10px', width: '48px', cursor: 'pointer' }}
+                              >
+                                Duyệt
+                              </button>
+                              <button 
+                                className="quick-btn quick-btn-reject" 
+                                onClick={() => handleRejectUpgrade(m.id, m.name)}
+                                style={{ padding: '2px 6px', fontSize: '10px', width: '48px', cursor: 'pointer' }}
+                              >
+                                Hủy
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <span className={`badge ${m.status === 'approved' ? 'approved' : m.status === 'rejected' ? 'rejected' : 'pending'}`}>

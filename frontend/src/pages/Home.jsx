@@ -64,6 +64,16 @@ export const Home = () => {
     setModalOpen(false);
   };
 
+  const getTiersLink = () => {
+    if (role === 'member') return '/member-dashboard';
+    if (role === 'admin') return '/admin-dashboard';
+    return '/register';
+  };
+  const getTiersButtonText = () => {
+    if (role === 'member') return 'Nâng cấp ngay';
+    return 'Đăng ký ngay';
+  };
+
   // Demo images for trade opportunity cards
   const demoImages = [
     'https://images.unsplash.com/photo-1542744173-8e08562744ad?w=600&auto=format&fit=crop&q=60', // meeting
@@ -240,7 +250,7 @@ export const Home = () => {
                 <div className="pkg-item"><i className="ti ti-check"></i> Đăng tối đa 3 tin bài kết nối/tháng</div>
                 <div className="pkg-item"><i className="ti ti-check"></i> Hỏi đáp Trợ lý AI cơ bản</div>
               </div>
-              <Link to="/register" className="btn" style={{ width: '100%', justifyContent: 'center', padding: '10px', backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#ffffff', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>
+              <Link to={getTiersLink()} className="btn" style={{ width: '100%', justifyContent: 'center', padding: '10px', backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#ffffff', fontWeight: 600, textDecoration: 'none' }}>{getTiersButtonText()}</Link>
             </div>
 
             {/* Gold */}
@@ -257,7 +267,7 @@ export const Home = () => {
                 <div className="pkg-item"><i className="ti ti-check"></i> Mở rộng tương tác AI tự động kết nối</div>
                 <div className="pkg-item"><i className="ti ti-check"></i> Nhận cơ hội giao thương đặc quyền</div>
               </div>
-              <Link to="/register" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>
+              <Link to={getTiersLink()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px', fontWeight: 600, textDecoration: 'none' }}>{getTiersButtonText()}</Link>
             </div>
 
             {/* Platinum */}
@@ -274,7 +284,7 @@ export const Home = () => {
                 <div className="pkg-item"><i className="ti ti-check"></i> Báo cáo phân tích thị trường chuyên sâu</div>
                 <div className="pkg-item"><i className="ti ti-check"></i> Trợ lý AI riêng tùy biến cho thương hiệu</div>
               </div>
-              <Link to="/register" className="btn" style={{ width: '100%', justifyContent: 'center', padding: '10px', backgroundColor: 'rgba(30, 136, 229, 0.1)', borderColor: 'var(--primary)', color: '#ffffff', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>
+              <Link to={getTiersLink()} className="btn" style={{ width: '100%', justifyContent: 'center', padding: '10px', backgroundColor: 'rgba(30, 136, 229, 0.1)', borderColor: 'var(--primary)', color: '#ffffff', fontWeight: 600, textDecoration: 'none' }}>{getTiersButtonText()}</Link>
             </div>
           </div>
         </section>

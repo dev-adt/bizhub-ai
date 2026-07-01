@@ -96,10 +96,38 @@ db.query(`
       await db.query("ALTER TABLE posts ADD COLUMN image_url VARCHAR(1000) DEFAULT NULL AFTER deadline");
       console.log('✅ Đã thêm cột image_url vào bảng posts');
     }
+
+    // Thêm cột tier_expires_at và pending_tier_upgrade vào bảng members
+    const [memberCols] = await db.query("SHOW COLUMNS FROM members");
+    const memberColNames = memberCols.map(c => c.Field);
+    if (!memberColNames.includes('tier_expires_at')) {
+      await db.query("ALTER TABLE members ADD COLUMN tier_expires_at TIMESTAMP NULL DEFAULT NULL AFTER tier");
+      console.log('✅ Đã thêm cột tier_expires_at vào bảng members');
+    }
+    if (!memberColNames.includes('pending_tier_upgrade')) {
+      await db.query("ALTER TABLE members ADD COLUMN pending_tier_upgrade ENUM('Silver','Gold','Platinum') DEFAULT NULL AFTER tier_expires_at");
+      console.log('✅ Đã thêm cột pending_tier_upgrade vào bảng members');
+    }
   } catch (err) {
     console.error('❌ Lỗi khởi tạo DB hội viên:', err.message);
   }
 })();
+
+// Tự động gia hạn/giảm hạng gói khi hết hạn (chuyển về Silver)
+async function cleanupExpiredTiers() {
+  try {
+    await db.query(`
+      UPDATE members 
+      SET tier = 'Silver', tier_expires_at = NULL, pending_tier_upgrade = NULL 
+      WHERE tier_expires_at IS NOT NULL AND tier_expires_at < NOW()
+    `);
+  } catch (err) {
+    console.error('❌ Lỗi tự động dọn dẹp gói hết hạn:', err.message);
+  }
+}
+
+// Chạy dọn dẹp gói hết hạn ngay khi khởi động
+cleanupExpiredTiers();
 
 // Giới hạn phân hạng Tier
 const TIER_LIMITS = {
@@ -151,8 +179,11 @@ async function memberAuthMiddleware(req, res, next) {
 
   const token = authHeader.substring(7);
   try {
+    // Dọn dẹp trước khi query thông tin phiên làm việc
+    await cleanupExpiredTiers();
+
     const [sessions] = await db.query(
-      `SELECT s.*, m.name, m.email, m.status, m.tier
+      `SELECT s.*, m.name, m.email, m.status, m.tier, m.tier_expires_at, m.pending_tier_upgrade
        FROM member_sessions s 
        JOIN members m ON s.member_id = m.id 
        WHERE s.token = ? AND s.expires_at > NOW()`, 
@@ -169,6 +200,8 @@ async function memberAuthMiddleware(req, res, next) {
       email: sessions[0].email,
       status: sessions[0].status,
       tier: sessions[0].tier,
+      tier_expires_at: sessions[0].tier_expires_at,
+      pending_tier_upgrade: sessions[0].pending_tier_upgrade,
       token: token
     };
     next();
@@ -387,6 +420,14 @@ app.post('/api/member/login', async (req, res) => {
     }
 
     const member = rows[0];
+
+    // Kiểm tra phê duyệt trước khi cho phép đăng nhập
+    if (member.status === 'pending') {
+      return res.status(403).json({ success: false, error: 'Tài khoản của bạn đang chờ phê duyệt. Vui lòng đợi Ban quản trị duyệt hồ sơ.' });
+    }
+    if (member.status === 'rejected') {
+      return res.status(403).json({ success: false, error: 'Tài khoản của bạn đã bị từ chối phê duyệt. Lý do: ' + (member.reject_reason || 'Không rõ') });
+    }
     
     if (!member.password_hash) {
       return res.status(401).json({ success: false, error: 'Tài khoản chưa được kích hoạt mật khẩu. Vui lòng liên hệ ban quản trị.' });
@@ -413,7 +454,9 @@ app.post('/api/member/login', async (req, res) => {
         name: member.name,
         email: member.email,
         status: member.status,
-        tier: member.tier
+        tier: member.tier,
+        tier_expires_at: member.tier_expires_at,
+        pending_tier_upgrade: member.pending_tier_upgrade
       }
     });
   } catch (err) {
@@ -514,6 +557,34 @@ app.get('/api/member/dashboard', memberAuthMiddleware, async (req, res) => {
   }
 });
 
+// Gửi yêu cầu nâng cấp gói hội viên
+app.post('/api/member/upgrade', memberAuthMiddleware, async (req, res) => {
+  const { tier } = req.body;
+  if (!tier || !['Silver', 'Gold', 'Platinum'].includes(tier)) {
+    return res.status(400).json({ success: false, error: 'Gói hội viên yêu cầu nâng cấp không hợp lệ.' });
+  }
+
+  try {
+    const memberId = req.member.id;
+    // Kiểm tra xem gói yêu cầu có cao hơn gói hiện tại không
+    const [memberRows] = await db.query('SELECT tier FROM members WHERE id = ?', [memberId]);
+    if (!memberRows.length) {
+      return res.status(404).json({ success: false, error: 'Không tìm thấy thông tin hội viên.' });
+    }
+
+    const currentTier = memberRows[0].tier;
+    const tierPriority = { Silver: 1, Gold: 2, Platinum: 3 };
+    if (tierPriority[tier] <= tierPriority[currentTier]) {
+      return res.status(400).json({ success: false, error: 'Gói yêu cầu nâng cấp phải cao hơn gói hiện tại của bạn.' });
+    }
+
+    await db.query('UPDATE members SET pending_tier_upgrade = ? WHERE id = ?', [tier, memberId]);
+    res.json({ success: true, message: `Đã gửi yêu cầu nâng cấp lên gói ${tier} đang chờ admin phê duyệt.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // Lưu cấu hình và API key của AI Provider
 app.post('/api/admin/save-config', authMiddleware, async (req, res) => {
@@ -602,6 +673,7 @@ app.get('/api/health', async (req, res) => {
 // Lấy danh sách hội viên
 app.get('/api/members', async (req, res) => {
   try {
+    await cleanupExpiredTiers();
     const { status, tier, industry, search } = req.query;
 
     // Kiểm tra quyền truy cập nâng cao
@@ -729,6 +801,47 @@ app.patch('/api/members/:id/reject', authMiddleware, async (req, res) => {
   }
 });
 
+// Duyệt yêu cầu nâng cấp gói hội viên
+app.patch('/api/admin/members/:id/approve-upgrade', authMiddleware, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const [rows] = await db.query('SELECT pending_tier_upgrade FROM members WHERE id = ?', [memberId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, error: 'Không tìm thấy thông tin hội viên.' });
+    }
+
+    const pendingUpgrade = rows[0].pending_tier_upgrade;
+    if (!pendingUpgrade) {
+      return res.status(400).json({ success: false, error: 'Hội viên này không có yêu cầu nâng cấp gói nào đang chờ phê duyệt.' });
+    }
+
+    // Thời hạn gói là 1 năm từ ngày phê duyệt
+    await db.query(
+      `UPDATE members SET 
+        tier = ?, 
+        tier_expires_at = DATE_ADD(NOW(), INTERVAL 1 YEAR), 
+        pending_tier_upgrade = NULL 
+       WHERE id = ?`,
+      [pendingUpgrade, memberId]
+    );
+
+    res.json({ success: true, message: `Phê duyệt nâng cấp hội viên lên gói ${pendingUpgrade} thành công.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Từ chối yêu cầu nâng cấp gói hội viên
+app.patch('/api/admin/members/:id/reject-upgrade', authMiddleware, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    await db.query('UPDATE members SET pending_tier_upgrade = NULL WHERE id = ?', [memberId]);
+    res.json({ success: true, message: 'Đã từ chối và hủy bỏ yêu cầu nâng cấp gói.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ════════════════════════════════════════════
 // POSTS API
 // ════════════════════════════════════════════
@@ -736,6 +849,7 @@ app.patch('/api/members/:id/reject', authMiddleware, async (req, res) => {
 // Lấy danh sách bài viết
 app.get('/api/posts', async (req, res) => {
   try {
+    await cleanupExpiredTiers();
     const { status, member_id, search } = req.query;
 
     // Kiểm tra quyền truy cập

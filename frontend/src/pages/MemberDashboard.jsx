@@ -114,6 +114,27 @@ export const MemberDashboard = () => {
     }
   };
 
+  const handleRequestUpgrade = async (targetTier) => {
+    if (!confirm(`Bạn muốn gửi yêu cầu nâng cấp tài khoản lên gói ${targetTier}?`)) return;
+
+    try {
+      const res = await fetch('/api/member/upgrade', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ tier: targetTier })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert('Gửi yêu cầu nâng cấp thành công! Vui lòng chờ admin phê duyệt.');
+        loadDashboardData();
+      } else {
+        alert(data.error || 'Yêu cầu nâng cấp thất bại.');
+      }
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
   const handleNewPostChange = (e) => {
     const { id, value } = e.target;
     setNewPostData(prev => ({
@@ -286,9 +307,19 @@ export const MemberDashboard = () => {
                 <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '24px', fontWeight: 800, color: '#fff', margin: 0 }}>
                   Dashboard Hội viên
                 </h1>
-                <span className={`badge ${userTier === 'Platinum' ? 'b-platinum' : userTier === 'Gold' ? 'b-gold' : 'b-silver'}`}>
+                <span className={`badge ${userTier === 'Platinum' ? 'b-platinum' : userTier === 'Gold' ? 'b-gold' : 'b-silver'}`} style={{ marginRight: '8px' }}>
                   {userTier === 'Platinum' ? '💎 Platinum' : userTier === 'Gold' ? '🏅 Gold' : '🪙 Silver'}
                 </span>
+                {profileData.tier_expires_at && userTier !== 'Silver' && (
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', backgroundColor: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '4px', marginRight: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="ti ti-calendar-event"></i> Hạn dùng gói: {new Date(profileData.tier_expires_at).toLocaleDateString('vi-VN')}
+                  </span>
+                )}
+                {profileData.pending_tier_upgrade && (
+                  <span style={{ fontSize: '11px', color: 'var(--amber)', backgroundColor: 'rgba(245,158,11,0.08)', border: '1px dashed rgba(245,158,11,0.3)', padding: '4px 10px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="ti ti-loader animate-spin" style={{ fontSize: '10px' }}></i> Chờ duyệt nâng cấp lên {profileData.pending_tier_upgrade}
+                  </span>
+                )}
               </div>
               <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                 Quản trị tài khoản doanh nghiệp thành viên <strong>{profileData.name}</strong>
@@ -434,6 +465,41 @@ export const MemberDashboard = () => {
 
           {/* Right Column: Statistics & opportunities list */}
           <div>
+            {userTier !== 'Platinum' && (
+              <div className="dash-card" style={{ padding: '1.25rem', border: '1px solid rgba(245,158,11,0.2)', background: 'linear-gradient(to bottom, rgba(245,158,11,0.02), rgba(0,0,0,0))', marginBottom: '1rem' }}>
+                <div className="card-title" style={{ color: 'var(--amber)', marginBottom: '0.75rem' }}>
+                  <i className="ti ti-arrow-big-up-lines"></i> Nâng cấp gói thành viên
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.5' }}>
+                  Nâng cấp lên gói <strong>Gold</strong> hoặc <strong>Platinum</strong> để đăng tin giao thương không giới hạn và tăng hiệu suất AI.
+                </p>
+                {profileData.pending_tier_upgrade ? (
+                  <div style={{ padding: '8px 12px', background: 'rgba(245,158,11,0.06)', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.2)', fontSize: '11.5px', color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="ti ti-clock"></i> Yêu cầu nâng cấp lên {profileData.pending_tier_upgrade === 'Platinum' ? '💎 Platinum' : '🏅 Gold'} đang chờ duyệt.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {userTier === 'Silver' && (
+                      <button 
+                        onClick={() => handleRequestUpgrade('Gold')}
+                        className="btn" 
+                        style={{ flex: 1, fontSize: '11.5px', padding: '6px 10px', background: 'var(--amber)', borderColor: 'var(--amber)', color: '#000', fontWeight: 600 }}
+                      >
+                        🏅 Lên Gold
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleRequestUpgrade('Platinum')}
+                      className="btn btn-primary" 
+                      style={{ flex: 1, fontSize: '11.5px', padding: '6px 10px', fontWeight: 600 }}
+                    >
+                      💎 Lên Platinum
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="dash-card" style={{ padding: '1.25rem' }}>
               <div className="card-title" style={{ marginBottom: '1rem' }}>
                 <i className="ti ti-chart-bar"></i> Thống kê tin đăng
