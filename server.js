@@ -1422,6 +1422,24 @@ app.get('/api/events', async (req, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
     const upcomingOnly = req.query.upcoming === 'true';
 
+    // Tự động cập nhật trạng thái sự kiện dựa trên ngày hiện tại
+    try {
+      await db.query(`
+        UPDATE events 
+        SET status = CASE 
+          WHEN event_date < CURDATE() AND status != 'cancelled' AND status != 'completed' THEN 'completed'
+          WHEN event_date = CURDATE() AND status != 'cancelled' AND status != 'ongoing' THEN 'ongoing'
+          ELSE status
+        END
+        WHERE status != 'cancelled' AND (
+          (event_date < CURDATE() AND status != 'completed') OR
+          (event_date = CURDATE() AND status != 'ongoing')
+        )
+      `);
+    } catch (e) {
+      console.error('Lỗi tự động cập nhật trạng thái sự kiện:', e.message);
+    }
+
     let memberId = null;
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -1440,7 +1458,8 @@ app.get('/api/events', async (req, res) => {
     let whereClause = '';
 
     if (upcomingOnly) {
-      whereClause = ` WHERE e.event_date >= CURDATE() AND e.status != 'cancelled' `;
+      // Khi lọc trang chủ: Chỉ lấy các sự kiện chưa kết thúc/chưa hủy
+      whereClause = ` WHERE e.status IN ('upcoming', 'ongoing') `;
     }
 
     console.log(`[Events GET] Limit: ${limit}, Upcoming: ${upcomingOnly}, Member ID: ${memberId}`);
@@ -1453,7 +1472,15 @@ app.get('/api/events', async (req, res) => {
                (SELECT COUNT(*) FROM event_interests WHERE event_id = e.id AND member_id = ?) > 0 AS is_interested
         FROM events e
         ${whereClause}
-        ORDER BY e.event_date ASC
+        ORDER BY 
+          CASE status
+            WHEN 'ongoing' THEN 1
+            WHEN 'upcoming' THEN 2
+            WHEN 'completed' THEN 3
+            WHEN 'cancelled' THEN 4
+            ELSE 5
+          END ASC,
+          e.event_date ASC
       `;
       params.push(memberId);
     } else {
@@ -1464,7 +1491,15 @@ app.get('/api/events', async (req, res) => {
                0 AS is_interested
         FROM events e
         ${whereClause}
-        ORDER BY e.event_date ASC
+        ORDER BY 
+          CASE status
+            WHEN 'ongoing' THEN 1
+            WHEN 'upcoming' THEN 2
+            WHEN 'completed' THEN 3
+            WHEN 'cancelled' THEN 4
+            ELSE 5
+          END ASC,
+          e.event_date ASC
       `;
     }
 
@@ -1474,6 +1509,7 @@ app.get('/api/events', async (req, res) => {
     }
 
     const [rows] = await db.query(sql, params);
+    console.log('[Events GET Result]:', rows.map(r => ({ id: r.id, title: r.title, interest_count: r.interest_count, is_interested: r.is_interested })));
     res.json({ success: true, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
