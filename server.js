@@ -1122,17 +1122,7 @@ app.patch('/api/posts/:id/reject', authMiddleware, async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════
-// EVENTS API
-// ════════════════════════════════════════════
-app.get('/api/events', async (req, res) => {
-  try {
-    const [rows] = await db.query("SELECT * FROM events WHERE status != 'cancelled' ORDER BY event_date ASC");
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+
 
 // Lấy số liệu công khai cho trang chủ
 app.get('/api/public-stats', async (req, res) => {
