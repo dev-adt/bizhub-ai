@@ -1086,6 +1086,9 @@ app.post('/api/posts', memberAuthMiddleware, async (req, res) => {
 // Lấy chi tiết 1 bài đăng
 app.get('/api/posts/:id', async (req, res) => {
   try {
+    // Tự động tăng lượt xem thêm 1
+    await db.query("UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE id = ?", [req.params.id]);
+
     const [rows] = await db.query(
       `SELECT p.*, m.name AS company_name, m.tier AS company_tier 
        FROM posts p LEFT JOIN members m ON p.member_id = m.id 
@@ -1138,6 +1141,25 @@ app.put('/api/posts/:id', memberAuthMiddleware, async (req, res) => {
     );
 
     res.json({ success: true, message: 'Cập nhật bài viết thành công.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Hội viên tự xóa bài đăng của mình (Member)
+app.delete('/api/posts/:id', memberAuthMiddleware, async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const memberId = req.member.id;
+
+    // Xác minh quyền sở hữu bài đăng
+    const [posts] = await db.query("SELECT id FROM posts WHERE id = ? AND member_id = ?", [postId, memberId]);
+    if (posts.length === 0) {
+      return res.status(403).json({ success: false, error: 'Bạn không có quyền xóa bài viết này.' });
+    }
+
+    await db.query("DELETE FROM posts WHERE id = ?", [postId]);
+    res.json({ success: true, message: 'Đã xóa bài viết thành công.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

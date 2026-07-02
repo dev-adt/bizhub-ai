@@ -138,6 +138,25 @@ export const MemberDashboard = () => {
     }
   };
 
+  const handleDeletePost = async (id, title) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa bài đăng "${title}"?`)) return;
+    try {
+      const res = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        alert('Đã xóa bài đăng thành công!');
+        loadDashboardData();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Xóa bài đăng thất bại.');
+      }
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
   const handleNewPostChange = (e) => {
     const { id, value } = e.target;
     setNewPostData(prev => ({
@@ -552,6 +571,13 @@ export const MemberDashboard = () => {
                             style={{ background: 'none', border: 'none', color: 'var(--primary-light)', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', outline: 'none' }}
                           >
                             <i className="ti ti-edit"></i> Sửa
+                          </button>
+                          <span>·</span>
+                          <button 
+                            onClick={() => handleDeletePost(p.id, p.title)}
+                            style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', outline: 'none' }}
+                          >
+                            <i className="ti ti-trash"></i> Xóa
                           </button>
                         </div>
                       </div>
