@@ -51,7 +51,9 @@ export const Members = () => {
             desc: m.description || 'Chưa có mô tả chi tiết hoạt động kinh doanh.',
             date: new Date(m.created_at).toLocaleDateString('vi-VN'),
             is_featured: m.is_featured,
-            city: m.city || 'Việt Nam'
+            city: m.city || 'Việt Nam',
+            phone: m.phone || 'Chưa cập nhật',
+            contact_name: m.contact_name || 'Đại diện hội viên'
           };
         });
 
@@ -228,13 +230,30 @@ export const Members = () => {
                       </div>
                       <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '15px', flex: 1, textAlign: 'left', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.desc}</p>
                       
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                      {/* Contact Info Block */}
+                      {m.email !== '***@***.***' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '11.5px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <div style={{ color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-user" style={{ color: 'var(--amber)' }}></i> {m.contact_name}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-mail" style={{ color: 'var(--amber)' }}></i> {m.email}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-phone" style={{ color: 'var(--amber)' }}></i> {m.phone}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', fontSize: '11.5px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                          <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-lock"></i> Đăng nhập để hiển thị liên hệ
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className={`badge ${tierClass}`}>{tierBadge}</span>
-                        {m.email !== '***@***.***' ? (
-                          <a href={`mailto:${m.email}`} className="btn" style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', textDecoration: 'none' }}><i className="ti ti-mail"></i> Liên hệ</a>
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-lock"></i> Ẩn liên hệ</span>
-                        )}
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || 'Việt Nam'}</span>
                       </div>
                     </div>
                   </div>
@@ -278,13 +297,30 @@ export const Members = () => {
                       </div>
                       <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '15px', flex: 1, textAlign: 'left', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.desc}</p>
                       
-                      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                      {/* Contact Info Block */}
+                      {m.email !== '***@***.***' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '11.5px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <div style={{ color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-user" style={{ color: 'var(--amber)' }}></i> {m.contact_name}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-mail" style={{ color: 'var(--amber)' }}></i> {m.email}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-phone" style={{ color: 'var(--amber)' }}></i> {m.phone}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', fontSize: '11.5px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                          <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-lock"></i> Đăng nhập để hiển thị liên hệ
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className={`badge ${tierClass}`}>{tierBadge}</span>
-                        {m.email !== '***@***.***' ? (
-                          <a href={`mailto:${m.email}`} className="btn" style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', textDecoration: 'none' }}><i className="ti ti-mail"></i> Liên hệ</a>
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-lock"></i> Ẩn liên hệ</span>
-                        )}
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || 'Việt Nam'}</span>
                       </div>
                     </div>
                   </div>
