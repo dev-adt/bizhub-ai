@@ -4,4 +4,7 @@ logs/
 *.log
 .DS_Store
 public_backup/
-
+HUONG-DAN-DEPLOY.md
+HUONG-DAN-ENV.md
+HUONG-DAN-MYSQL.md
+test-api.js

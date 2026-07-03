@@ -517,7 +517,7 @@ export const Home = () => {
             <div className="pkg-card gold">
               <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--amber)', color: '#000', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px', textTransform: 'uppercase' }}>{t('label_popular')}</div>
               <div className="pkg-header">
-                <div className="pkg-name" style={{ color: 'var(--amber)' }}>Gold</div>
+                <div className="pkg-name" style={{ color: 'var(--amber)' }}>{t('tier_gold')}</div>
                 <div className="pkg-price" style={{ fontSize: '24px' }}>{t('price_gold_val')} <span>/ {t('pricing_per_year')}</span></div>
               </div>
               <div className="pkg-list">
@@ -534,7 +534,7 @@ export const Home = () => {
             <div className="pkg-card platinum">
               <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--primary)', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px', textTransform: 'uppercase' }}>{t('label_elite')}</div>
               <div className="pkg-header">
-                <div className="pkg-name" style={{ color: 'var(--primary-light)' }}>Platinum</div>
+                <div className="pkg-name" style={{ color: 'var(--primary-light)' }}>{t('tier_platinum')}</div>
                 <div className="pkg-price" style={{ fontSize: '24px' }}>{t('price_platinum_val')} <span>/ {t('pricing_per_year')}</span></div>
               </div>
               <div className="pkg-list">
