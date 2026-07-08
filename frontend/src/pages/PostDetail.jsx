@@ -9,7 +9,7 @@ export const PostDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role, token } = useAuth();
-  const { currentLang } = useTranslation();
+  const { currentLang, t } = useTranslation();
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -262,15 +262,15 @@ export const PostDetail = () => {
               <div className="glass-card" style={{ padding: '24px', position: 'relative' }}>
                 {post.is_featured === 1 && (
                   <span style={{ position: 'absolute', top: '16px', right: '16px', fontSize: '10px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.3)', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Nổi bật <i className="ti ti-star-filled"></i>
+                    {t('badge_featured')} <i className="ti ti-star-filled"></i>
                   </span>
                 )}
                 
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                   <span style={{ fontSize: '10px', background: 'rgba(0, 229, 255, 0.1)', color: 'var(--neon-cyan)', border: '1px solid rgba(0, 229, 255, 0.2)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
-                    {post.type === 'offer' ? 'Cần bán / Cung cấp' : post.type === 'demand' ? 'Cần mua / Tìm kiếm' : 'Hợp tác'}
+                    {post.type === 'offer' ? t('type_offer') : post.type === 'demand' ? t('type_demand') : t('type_cooperate')}
                   </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{post.category || 'Chung'}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{post.category || t('category_default')}</span>
                 </div>
 
                 <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', color: '#fff', fontWeight: 700, lineHeight: '1.4', margin: '0 0 12px' }}>
@@ -278,12 +278,12 @@ export const PostDetail = () => {
                 </h1>
                 
                 <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-                  Đăng ngày: <strong style={{ color: '#fff' }}>{dateStr}</strong>
+                  {t('date_posted_label')}: <strong style={{ color: '#fff' }}>{dateStr}</strong>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Dịch sang:</span>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>{t('translate_select_lang')}:</span>
                     <select
                       value={translateTargetLang}
                       onChange={(e) => setTranslateTargetLang(e.target.value)}
@@ -325,7 +325,7 @@ export const PostDetail = () => {
                     }}
                   >
                     <i className={loadingTranslate ? "ti ti-loader animate-spin" : "ti ti-language"}></i>
-                    {loadingTranslate ? 'Đang dịch...' : isTranslated ? 'Xem bản gốc (VI)' : `Dịch nội dung (AI)`}
+                    {loadingTranslate ? '...' : isTranslated ? t('translate_view_original') : t('translate_button')}
                   </button>
                 </div>
               </div>
@@ -360,7 +360,7 @@ export const PostDetail = () => {
               
               {/* Author / Company Details */}
               <div className="glass-card" style={{ padding: '20px' }}>
-                <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 15px' }}>Đơn vị đăng tải</h4>
+                <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 15px' }}>{t('sidebar_author')}</h4>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
                   <div className="av-circle" style={{ width: '48px', height: '48px', fontSize: '18px', background: isPlatinum ? 'linear-gradient(135deg, #FFD700, #FFA500)' : isGold ? 'var(--amber-glow)' : 'var(--primary-glow)', color: '#fff' }}>
@@ -400,7 +400,7 @@ export const PostDetail = () => {
                           outline: 'none'
                         }}
                       >
-                        <i className="ti ti-info-circle"></i> Xem chi tiết
+                        <i className="ti ti-info-circle"></i> {t('btn_view_details')}
                       </button>
                     )}
                   </div>
@@ -409,16 +409,16 @@ export const PostDetail = () => {
                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '15px 0' }} />
                 
                 {/* Contact Information Section (Login Wall) */}
-                <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px' }}>Thông tin liên hệ</h4>
+                <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px' }}>{t('contact_info_label')}</h4>
                 
                 {isGuest ? (
                   <div style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px', textAlign: 'center' }}>
                     <i className="ti ti-lock" style={{ fontSize: '20px', color: 'var(--neon-cyan)', marginBottom: '8px', display: 'block' }}></i>
                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: '1.5' }}>
-                      Đăng nhập hội viên để xem thông tin liên hệ của dự án này.
+                      {t('login_required_desc')}
                     </p>
                     <Link to="/login" className="btn btn-primary" style={{ display: 'block', padding: '6px 12px', fontSize: '11.5px', textDecoration: 'none', textAlign: 'center' }}>
-                      Đăng nhập ngay
+                      {t('login_now')}
                     </Link>
                   </div>
                 ) : (
@@ -426,7 +426,7 @@ export const PostDetail = () => {
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                       <i className="ti ti-info-square" style={{ color: 'var(--neon-cyan)', marginTop: '2px' }}></i>
                       <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.85)', wordBreak: 'break-word' }}>
-                        {post.contact_info || 'Liên hệ trực tiếp qua hệ thống'}
+                        {post.contact_info || t('contact_info_label')}
                       </div>
                     </div>
                   </div>
@@ -435,7 +435,7 @@ export const PostDetail = () => {
 
               {/* Navigation Back */}
               <Link to="/posts" className="btn" style={{ display: 'block', padding: '10px 15px', fontSize: '12.5px', textDecoration: 'none', background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center' }}>
-                <i className="ti ti-arrow-left"></i> Quay lại Bảng tin
+                <i className="ti ti-arrow-left"></i> {t('btn_back_to_feed')}
               </Link>
 
             </div>
@@ -519,7 +519,7 @@ export const PostDetail = () => {
                 {memberDetails.description && (
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Mô tả hoạt động</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('label_desc')}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <select
                           value={memberTranslateTargetLang}
@@ -558,7 +558,7 @@ export const PostDetail = () => {
                           }}
                         >
                           <i className={loadingMemberDescTranslate ? "ti ti-loader animate-spin" : "ti ti-language"}></i>
-                          {loadingMemberDescTranslate ? '...' : isMemberDescTranslated ? 'Xem gốc' : 'Dịch AI'}
+                          {loadingMemberDescTranslate ? '...' : isMemberDescTranslated ? t('translate_view_original_short') : 'Dịch AI'}
                         </button>
                       </div>
                     </div>
@@ -571,14 +571,14 @@ export const PostDetail = () => {
                 {/* Contact wall check */}
                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '15px' }} />
                 
-                <h3 style={{ fontSize: '13px', color: '#fff', fontWeight: 600, margin: '0 0 10px' }}>Thông tin liên hệ</h3>
+                <h3 style={{ fontSize: '13px', color: '#fff', fontWeight: 600, margin: '0 0 10px' }}>{t('contact_info_label')}</h3>
                 {isGuest ? (
                   <div style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px', textAlign: 'center' }}>
                     <i className="ti ti-lock" style={{ fontSize: '18px', color: 'var(--neon-cyan)', marginBottom: '6px', display: 'block' }}></i>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: '1.4' }}>
-                      Bạn cần đăng nhập để xem thông tin liên hệ trực tiếp của doanh nghiệp này.
+                      {t('login_required_desc')}
                     </p>
-                    <Link to="/login" className="btn btn-primary" style={{ padding: '4px 15px', fontSize: '11px' }}>Đăng nhập ngay</Link>
+                    <Link to="/login" className="btn btn-primary" style={{ padding: '4px 15px', fontSize: '11px' }}>{t('login_now')}</Link>
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

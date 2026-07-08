@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../contexts/LanguageContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export const Posts = () => {
   const { role, token } = useAuth();
   const navigate = useNavigate();
+  const { currentLang, t } = useTranslation();
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,9 +124,9 @@ export const Posts = () => {
         {/* Title Header */}
         <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
           <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
-            <i className="ti ti-news" style={{ color: 'var(--neon-cyan)' }}></i> Tin bài & Cơ hội giao thương
+            <i className="ti ti-news" style={{ color: 'var(--neon-cyan)' }}></i> {t('posts_title')}
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBlockEnd: 0 }}>Cập nhật tin tức, cơ hội hợp tác kinh tế, tuyển dụng mới nhất từ các doanh nghiệp hội viên.</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBlockEnd: 0 }}>{t('posts_subtitle')}</p>
         </div>
 
         {/* 1. TOP PLATINUM SLIDER */}
@@ -171,13 +173,13 @@ export const Posts = () => {
                   {/* Content (Layer 3) */}
                   <div style={{ flex: 1, padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', textAlign: 'left', zIndex: 3, maxWidth: '600px' }}>
                     <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-crown"></i> Đối tác Platinum
+                      <i className="ti ti-crown"></i> {t('tier_platinum_partner')}
                     </span>
                     <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '20px', fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.3 }}>{p.title}</h2>
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 15px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.summary || p.body.replace(/<[^>]*>/g, '').substring(0, 150)}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                       <button onClick={() => navigate('/posts/' + p.id)} className="btn btn-primary" style={{ fontSize: '12px', padding: '8px 18px' }}>
-                        Đọc bài viết <i className="ti ti-arrow-right"></i>
+                        {t('btn_read_more')} <i className="ti ti-arrow-right"></i>
                       </button>
                       <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{p.company_name}</span>
                     </div>
@@ -217,7 +219,7 @@ export const Posts = () => {
               <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-muted)' }}></i>
               <input 
                 type="text" 
-                placeholder="Tìm bài viết, đối tác..." 
+                placeholder={t('search_posts_placeholder')} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ padding: '8px 12px 8px 30px', width: '100%', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff' }}
@@ -230,10 +232,10 @@ export const Posts = () => {
               onChange={(e) => setSelectedTier(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff', cursor: 'pointer', minWidth: '130px' }}
             >
-              <option value="">Tất cả hội viên</option>
-              <option value="Platinum">Hội viên Platinum</option>
-              <option value="Gold">Hội viên Gold</option>
-              <option value="Silver">Hội viên Silver</option>
+              <option value="">{t('all_members')}</option>
+              <option value="Platinum">{t('tier_platinum_members')}</option>
+              <option value="Gold">{t('tier_gold_members')}</option>
+              <option value="Silver">{t('tier_silver_members')}</option>
             </select>
 
             {/* Filter by Type */}
@@ -242,16 +244,16 @@ export const Posts = () => {
               onChange={(e) => setSelectedType(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff', cursor: 'pointer', minWidth: '140px' }}
             >
-              <option value="">Tất cả phân loại</option>
-              <option value="offer">Cung cấp sản phẩm</option>
-              <option value="demand">Tìm kiếm / Nhu cầu</option>
-              <option value="cooperate">Hợp tác phát triển</option>
+              <option value="">{t('all_types')}</option>
+              <option value="offer">{t('type_offer')}</option>
+              <option value="demand">{t('type_demand')}</option>
+              <option value="cooperate">{t('type_cooperate')}</option>
             </select>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <span>Hiển thị:</span>
+              <span>{t('label_show')}:</span>
               <select
                 value={postsPerPage}
                 onChange={(e) => {
@@ -269,13 +271,13 @@ export const Posts = () => {
                   outline: 'none'
                 }}
               >
-                <option value="5">5 bài/trang</option>
-                <option value="10">10 bài/trang</option>
-                <option value="25">25 bài/trang</option>
+                <option value="5">{t('posts_per_page')(5)}</option>
+                <option value="10">{t('posts_per_page')(10)}</option>
+                <option value="25">{t('posts_per_page')(25)}</option>
               </select>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Tìm thấy <strong>{sortedPosts.length}</strong> bài viết
+              {t('found_posts')(sortedPosts.length)}
             </div>
           </div>
         </div>
@@ -284,7 +286,7 @@ export const Posts = () => {
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '5rem' }}>
             <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-              <i className="ti ti-loader animate-spin" style={{ fontSize: '28px', display: 'block', margin: '0 auto 10px' }}></i> Đang tải bài viết...
+              <i className="ti ti-loader animate-spin" style={{ fontSize: '28px', display: 'block', margin: '0 auto 10px' }}></i> {t('loading_posts')}
             </div>
           </div>
         ) : error ? (
@@ -294,7 +296,7 @@ export const Posts = () => {
         ) : currentPosts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '5rem' }} className="glass-card">
             <i className="ti ti-news" style={{ fontSize: '32px', display: 'block', marginBottom: '10px', color: 'var(--text-muted)' }}></i>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Không tìm thấy bài viết nào phù hợp với bộ lọc.</span>
+            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{t('no_posts_found')}</span>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -313,7 +315,7 @@ export const Posts = () => {
                   {/* Featured Badge */}
                   {p.is_featured === 1 && (
                     <span style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '9px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.3)', padding: '2px 6px', borderRadius: '3px', textTransform: 'uppercase', fontWeight: 700, zIndex: 1 }}>
-                      Nổi bật <i className="ti ti-star-filled"></i>
+                      {t('badge_featured')} <i className="ti ti-star-filled"></i>
                     </span>
                   )}
 
@@ -353,7 +355,7 @@ export const Posts = () => {
                       {/* Tag & classification */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '9.5px', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '4px', background: 'rgba(0,229,255,0.08)', color: 'var(--neon-cyan)', border: '1px solid rgba(0,229,255,0.15)', fontWeight: 600 }}>
-                          {p.type === 'offer' ? 'Cung cấp' : p.type === 'demand' ? 'Nhu cầu' : 'Hợp tác'}
+                          {p.type === 'offer' ? t('type_offer_short') : p.type === 'demand' ? t('type_demand_short') : t('type_cooperate_short')}
                         </span>
                         {p.category && (
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.category}</span>
@@ -364,7 +366,7 @@ export const Posts = () => {
                     {/* Action button right */}
                     <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
                       <button onClick={() => navigate('/posts/' + p.id)} className="btn btn-primary" style={{ fontSize: '12.5px', padding: '8px 18px' }}>
-                        Đọc bài <i className="ti ti-book-open"></i>
+                        {t('btn_read_post')} <i className="ti ti-book-open"></i>
                       </button>
                     </div>
 
@@ -382,10 +384,10 @@ export const Posts = () => {
                   className="btn"
                   style={{ padding: '8px 16px', fontSize: '12px', opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
                 >
-                  <i className="ti ti-chevron-left"></i> Trang trước
+                  <i className="ti ti-chevron-left"></i> {t('btn_back_prev')}
                 </button>
                 <span style={{ fontSize: '12.5px', color: '#fff' }}>
-                  Trang <strong>{currentPage}</strong> / {totalPages}
+                  {t('label_page')} <strong>{currentPage}</strong> / {totalPages}
                 </span>
                 <button 
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
@@ -393,7 +395,7 @@ export const Posts = () => {
                   className="btn"
                   style={{ padding: '8px 16px', fontSize: '12px', opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
                 >
-                  Trang sau <i className="ti ti-chevron-right"></i>
+                  {t('btn_go_next')} <i className="ti ti-chevron-right"></i>
                 </button>
               </div>
             )}

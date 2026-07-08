@@ -7,7 +7,7 @@ import Footer from '../components/Footer';
 
 export const Members = () => {
   const { token } = useAuth();
-  const { currentLang } = useTranslation();
+  const { currentLang, t } = useTranslation();
   
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -167,9 +167,9 @@ export const Members = () => {
         {/* Title and Header */}
         <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
           <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
-            <i className="ti ti-users" style={{ color: 'var(--primary)' }}></i> Thư mục doanh nghiệp hội viên
+            <i className="ti ti-users" style={{ color: 'var(--primary)' }}></i> {t('members_title')}
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBlockEnd: 0 }}>Khám phá các doanh nghiệp thành viên đáng tin cậy trong mạng lưới AVG.</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBlockEnd: 0 }}>{t('members_subtitle')}</p>
         </div>
 
         {/* Filters bar */}
@@ -180,7 +180,7 @@ export const Members = () => {
               <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-muted)' }}></i>
               <input 
                 type="text" 
-                placeholder="Tìm tên, ngành, tỉnh thành..." 
+                placeholder={t('search_members_placeholder')} 
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 style={{ padding: '8px 12px 8px 30px', width: '100%', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff' }}
@@ -193,7 +193,7 @@ export const Members = () => {
               onChange={(e) => { setSelectedTier(e.target.value); setCurrentPage(1); }}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff', cursor: 'pointer', minWidth: '130px' }}
             >
-              <option value="">Tất cả hạng</option>
+              <option value="">{t('all_tiers')}</option>
               <option value="Platinum">💎 Platinum</option>
               <option value="Gold">🏅 Gold</option>
               <option value="Silver">🪙 Silver</option>
@@ -205,7 +205,7 @@ export const Members = () => {
               onChange={(e) => { setSelectedIndustry(e.target.value); setCurrentPage(1); }}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12.5px', outline: 'none', backgroundColor: 'var(--surface-3)', color: '#fff', cursor: 'pointer', minWidth: '150px' }}
             >
-              <option value="">Tất cả ngành nghề</option>
+              <option value="">{t('all_industries')}</option>
               {uniqueIndustries.map(ind => (
                 <option key={ind} value={ind}>{ind}</option>
               ))}
@@ -214,7 +214,7 @@ export const Members = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <span>Hiển thị:</span>
+              <span>{t('label_show')}:</span>
               <select
                 value={membersPerPage}
                 onChange={(e) => {
@@ -232,16 +232,16 @@ export const Members = () => {
                   outline: 'none'
                 }}
               >
-                <option value="6">6 thành viên</option>
-                <option value="12">12 thành viên</option>
-                <option value="24">24 thành viên</option>
+                <option value="6">{t('members_per_page')(6)}</option>
+                <option value="12">{t('members_per_page')(12)}</option>
+                <option value="24">{t('members_per_page')(24)}</option>
               </select>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Tìm thấy <strong>{filteredAndSortedMembers.length}</strong> hội viên
+              {t('found_members')(filteredAndSortedMembers.length)}
             </div>
             <Link to="/register" className="btn btn-primary" style={{ textDecoration: 'none', fontSize: '12.5px', padding: '8px 16px' }}>
-              <i className="ti ti-user-plus"></i> Đăng ký ngay
+              <i className="ti ti-user-plus"></i> {t('btn_upgrade_now')}
             </Link>
           </div>
         </div>
@@ -252,7 +252,7 @@ export const Members = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem', textAlign: 'left' }}>
               <i className="ti ti-crown" style={{ color: 'var(--amber)', fontSize: '20px' }}></i>
               <h2 style={{ fontFamily: 'var(--font-title)', fontSize: '16px', fontWeight: 700, color: 'var(--amber)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Hội viên nổi bật được đề xuất
+                {t('featured_members_header')}
               </h2>
             </div>
             
@@ -260,7 +260,7 @@ export const Members = () => {
               {featuredMembers.map((m) => {
                 const initials = m.name.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
                 const colors = getInitialsColors(m.name);
-                const tierBadge = m.tier === 'Platinum' ? '💎 Platinum' : m.tier === 'Gold' ? '🏅 Gold' : '🪙 Silver';
+                const tierBadge = m.tier === 'Platinum' ? '💎 ' + t('tier_platinum_members') : m.tier === 'Gold' ? '🏅 ' + t('tier_gold_members') : '🪙 ' + t('tier_silver_members');
                 const tierClass = m.tier === 'Platinum' ? 'b-platinum' : m.tier === 'Gold' ? 'b-gold' : 'b-silver';
                 
                 return (
@@ -328,7 +328,7 @@ export const Members = () => {
                               }}
                             >
                               <i className={loadingTranslations[`feat-${m.id}`] ? "ti ti-loader animate-spin" : "ti ti-language"}></i>
-                              {loadingTranslations[`feat-${m.id}`] ? '...' : translatedDescs[`feat-${m.id}`] ? 'Xem gốc' : 'Dịch AI'}
+                              {loadingTranslations[`feat-${m.id}`] ? '...' : translatedDescs[`feat-${m.id}`] ? t('translate_view_original_short') : 'Dịch AI'}
                             </button>
                           </div>
                         )}
@@ -350,14 +350,14 @@ export const Members = () => {
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', fontSize: '11.5px', border: '1px dashed rgba(255,255,255,0.05)' }}>
                           <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <i className="ti ti-lock"></i> Đăng nhập để hiển thị liên hệ
+                            <i className="ti ti-lock"></i> {t('contact_login_required')}
                           </div>
                         </div>
                       )}
 
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className={`badge ${tierClass}`}>{tierBadge}</span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || 'Việt Nam'}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || t('location_default')}</span>
                       </div>
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export const Members = () => {
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '5rem' }}>
             <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-              <i className="ti ti-loader animate-spin" style={{ fontSize: '28px', display: 'block', margin: '0 auto 10px' }}></i> Đang tải danh sách hội viên...
+              <i className="ti ti-loader animate-spin" style={{ fontSize: '28px', display: 'block', margin: '0 auto 10px' }}></i> {t('loading_members')}
             </div>
           </div>
         ) : error ? (
@@ -381,13 +381,13 @@ export const Members = () => {
         ) : filteredAndSortedMembers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '5rem' }} className="glass-card">
             <i className="ti ti-search" style={{ fontSize: '32px', display: 'block', marginBottom: '10px', color: 'var(--text-muted)' }}></i>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Không tìm thấy hội viên nào phù hợp với bộ lọc.</span>
+            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{t('no_members_found')}</span>
           </div>
         ) : (
           <div>
             <div id="members-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
               {currentMembers.map((m) => {
-                const tierBadge = m.tier === 'Platinum' ? '💎 Platinum' : m.tier === 'Gold' ? '🏅 Gold' : '🪙 Silver';
+                const tierBadge = m.tier === 'Platinum' ? '💎 ' + t('tier_platinum_members') : m.tier === 'Gold' ? '🏅 ' + t('tier_gold_members') : '🪙 ' + t('tier_silver_members');
                 const tierClass = m.tier === 'Platinum' ? 'b-platinum' : m.tier === 'Gold' ? 'b-gold' : 'b-silver';
                 
                 return (
@@ -452,7 +452,7 @@ export const Members = () => {
                               }}
                             >
                               <i className={loadingTranslations[m.id] ? "ti ti-loader animate-spin" : "ti ti-language"}></i>
-                              {loadingTranslations[m.id] ? '...' : translatedDescs[m.id] ? 'Xem gốc' : 'Dịch AI'}
+                              {loadingTranslations[m.id] ? '...' : translatedDescs[m.id] ? t('translate_view_original_short') : 'Dịch AI'}
                             </button>
                           </div>
                         )}
@@ -474,14 +474,14 @@ export const Members = () => {
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', marginTop: '8px', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', fontSize: '11.5px', border: '1px dashed rgba(255,255,255,0.05)' }}>
                           <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <i className="ti ti-lock"></i> Đăng nhập để hiển thị liên hệ
+                            <i className="ti ti-lock"></i> {t('contact_login_required')}
                           </div>
                         </div>
                       )}
 
                       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className={`badge ${tierClass}`}>{tierBadge}</span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || 'Việt Nam'}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}><i className="ti ti-map-pin"></i> {m.city || t('location_default')}</span>
                       </div>
                     </div>
                   </div>
@@ -506,7 +506,7 @@ export const Members = () => {
                     border: '1px solid rgba(255,255,255,0.08)'
                   }}
                 >
-                  <i className="ti ti-chevron-left"></i> Trước
+                  <i className="ti ti-chevron-left"></i> {t('btn_back_prev')}
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
@@ -543,7 +543,7 @@ export const Members = () => {
                     border: '1px solid rgba(255,255,255,0.08)'
                   }}
                 >
-                  Sau <i className="ti ti-chevron-right"></i>
+                  {t('btn_go_next')} <i className="ti ti-chevron-right"></i>
                 </button>
               </div>
             )}
